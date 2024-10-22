@@ -9,6 +9,7 @@ import MiddlewaresPipeline from './middlewaresPipeline.js';
 import * as router from './router.js';
 import { handleCORSPreflight } from './cors.js';
 import { handleStaticResourceRequest } from './staticResourcesServer.js';
+import cachedRequestsManager from './cachedRequestsManager.js';
 
 let api_server_version = serverVariables.get("main.api_server_version");
 
