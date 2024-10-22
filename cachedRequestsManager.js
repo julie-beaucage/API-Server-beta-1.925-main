@@ -36,7 +36,6 @@ export default class CachedRequestsManager {
       if (url != "") {
           for (let cache of requestsCache) {
               if (cache.url == url) {
-                  // renew cache
                   cache.Expire_Time = utilities.nowInSeconds() + cacheRequestsExpirationTime;
                   console.log(BgWhite + FgBlue, `[${cache.url} data retrieved from cache]`);
                   return cache.data;
@@ -77,22 +76,14 @@ static get(HttpContext) {
     Donc, si les données proviennent du cache, on ne les met pas dans une autre cache. 
     Si elles ne proviennent pas du cache, il faut les ajouter.
     */
-
     return new Promise(async (resolve) => {
-        // Cherche dans le cache
         const cache = CachedRequestsManager.find(HttpContext.req.url);
-        
-        // Vérifie si le cache a été trouvé
         if (cache) {
-            // Renouvelle le temps d'expiration
             cache.Expire_Time = utilities.nowInSeconds() + cacheRequestsExpirationTime;
-
-            // Envoie la réponse depuis le cache
             HttpContext.response.JSON(cache.content, cache.ETag, true);
             console.log(BgWhite + FgBlue, `[${cache.url} data retrieved from cache]`);
             resolve(true);
         } else {
-            // Pas de données dans le cache, on résout avec false
             resolve(false);
         }
     });
