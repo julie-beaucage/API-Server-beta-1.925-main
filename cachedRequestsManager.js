@@ -24,7 +24,10 @@ export default class CachedRequestsManager {
         ETag,
         Expire_Time: utilities.nowInSeconds() + cacheRequestsExpirationTime,
       });
-      console.log(BgWhite + FgOrange,  `[Data of url:  ${url} repository has been cached]` );
+      console.log(
+        BgWhite + FgOrange,
+        `[Data of url:  ${url} repository has been cached]`
+      );
     }
   }
   static startCachedRequestsCleaner() {
@@ -33,7 +36,10 @@ export default class CachedRequestsManager {
       CachedRequestsManager.flushExpired,
       cacheRequestsExpirationTime * 1000
     );
-    console.log(BgWhite + FgOrange,"[Periodic repositories data caches url cleaning process started...]");
+    console.log(
+      BgWhite + FgOrange,
+      "[Periodic repositories data caches url cleaning process started...]"
+    );
   }
   static find(url) {
     /* retourne la cache associée à l'url */
@@ -41,8 +47,12 @@ export default class CachedRequestsManager {
       if (url != "") {
         for (let cache of requestsCache) {
           if (cache.url == url) {
-            cache.Expire_Time = utilities.nowInSeconds() + cacheRequestsExpirationTime;
-            console.log(BgWhite + FgOrange, `[${cache.url} data url retrieved from cache]`);
+            cache.Expire_Time =
+              utilities.nowInSeconds() + cacheRequestsExpirationTime;
+            console.log(
+              BgWhite + FgOrange,
+              `[${cache.url} data url retrieved from cache]`
+            );
             return cache;
           }
         }
@@ -69,7 +79,10 @@ export default class CachedRequestsManager {
     let now = utilities.nowInSeconds();
     for (let cache of requestsCache) {
       if (cache.Expire_Time <= now) {
-        console.log(BgWhite + FgOrange,"Cached file data of url: " + cache.url + ".json expired" );
+        console.log(
+          BgWhite + FgOrange,
+          "Cached file data of url: " + cache.url + ".json expired"
+        );
       }
     }
     requestsCache = requestsCache.filter((cache) => cache.Expire_Time > now);
@@ -81,8 +94,11 @@ export default class CachedRequestsManager {
     Donc, si les données proviennent du cache, on ne les met pas dans une autre cache. 
     Si elles ne proviennent pas du cache, il faut les ajouter.
     */
+    if (!HttpContext.isCacheable) {
+      return false;
+    }
     let cache = CachedRequestsManager.find(HttpContext.req.url);
-    if (cache && HttpContext.isCacheable) {
+    if (cache) {
       HttpContext.response.JSON(cache.content, cache.ETag, true);
       return true;
     }
