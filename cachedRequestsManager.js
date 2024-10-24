@@ -45,6 +45,7 @@ export default class CachedRequestsManager {
     /* retourne la cache associée à l'url */
     try {
       if (url != "") {
+        
         for (let cache of requestsCache) {
           if (cache.url == url) {
             cache.Expire_Time =
@@ -68,7 +69,7 @@ export default class CachedRequestsManager {
       let indexToDelete = [];
       let index = 0;
       for (let cache of requestsCache) {
-        if (cache.url == url) indexToDelete.push(index);
+        if (url.includes(cache.url)) indexToDelete.push(index);
         index++;
       }
       utilities.deleteByIndex(requestsCache, indexToDelete);
@@ -94,6 +95,10 @@ export default class CachedRequestsManager {
     Donc, si les données proviennent du cache, on ne les met pas dans une autre cache. 
     Si elles ne proviennent pas du cache, il faut les ajouter.
     */
+    if (['POST', 'PUT', 'DELETE'].includes(HttpContext.req.method)) {
+        CachedRequestsManager.clear(HttpContext.req.url);
+        return false; 
+      }
     if (!HttpContext.isCacheable) {
       return false;
     }
