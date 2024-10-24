@@ -44,15 +44,15 @@ export default class Response {
     }
     JSON(obj, ETag = "",fromCache = false) {   
         // ok status with content
-        if (!fromCache && this.HttpContext.isCacheable)
-            {
-                CachedRequestsManager.add(this.HttpContext.req.url,obj,ETag);
-            }
         if (ETag != "")
             this.res.writeHead(200, { 'content-type': 'application/json', 'ETag': ETag });
         else
             this.res.writeHead(200, { 'content-type': 'application/json' });
         if (obj != null) {
+            if (!fromCache && this.HttpContext.isCacheable)
+                {
+                 CachedRequestsManager.add(this.HttpContext.req.url,obj,ETag);
+                }
             let content = JSON.stringify(obj);
             console.log(FgCyan+Bright, "Response payload -->", content.toString().substring(0, 75) + "...");
             return this.end(content);
