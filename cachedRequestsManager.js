@@ -1,5 +1,6 @@
 import * as utilities from "./utilities.js";
 import * as serverVariables from "./serverVariables.js";
+import Repository  from "./models/repository.js";
 
 let cacheRequestsExpirationTime = serverVariables.get(
   "main.cacheRequestsExpirationTime"
@@ -10,8 +11,19 @@ global.requestsCache = [];
 global.cachedRequestsCleaner = false;
 
 export default class CachedRequestsManager {
+
+    static startCachedRequestsCleaner() {
+        setInterval(CachedRequestsManager.flushExpired, cacheRequestsExpirationTime * 1000);
+        console.log(
+          BgWhite + FgOrange,
+          "[Periodic repositories data caches url cleaning process started...]"
+        );
+      }
+
   static add(url, content, ETag = "") {
     /* mise en cache */
+    console.log(`Mise en cache des données pour ${url} avec ETag : ${ETag}`);
+
     if (!cachedRequestsCleaner) {
       cachedRequestsCleaner = true;
       CachedRequestsManager.startCachedRequestsCleaner();
@@ -30,17 +42,7 @@ export default class CachedRequestsManager {
       );
     }
   }
-  static startCachedRequestsCleaner() {
-    /* démarre le processus de nettoyage des caches périmées */
-    setInterval(
-      CachedRequestsManager.flushExpired,
-      cacheRequestsExpirationTime * 1000
-    );
-    console.log(
-      BgWhite + FgOrange,
-      "[Periodic repositories data caches url cleaning process started...]"
-    );
-  }
+
   static find(url) {
     /* retourne la cache associée à l'url */
     try {
@@ -69,7 +71,8 @@ export default class CachedRequestsManager {
       let indexToDelete = [];
       let index = 0;
       for (let cache of requestsCache) {
-        if (url.includes(cache.url)) indexToDelete.push(index);
+        if (cache.url == url) indexToDelete.push(index);
+       // if (url.includes(cache.url)) indexToDelete.push(index);
         index++;
       }
       utilities.deleteByIndex(requestsCache, indexToDelete);
@@ -95,18 +98,22 @@ export default class CachedRequestsManager {
     Donc, si les données proviennent du cache, on ne les met pas dans une autre cache. 
     Si elles ne proviennent pas du cache, il faut les ajouter.
     */
-    if (['POST', 'PUT', 'DELETE'].includes(HttpContext.req.method)) {
+    /*if (['POST', 'PUT', 'DELETE'].includes(HttpContext.req.method)) {
         CachedRequestsManager.clear(HttpContext.req.url);
         return false; 
-      }
-    if (!HttpContext.isCacheable) {
-      return false;
+      }*/
+        if (!HttpContext.isCacheable) {
+            return false;
+        }
+        let cache = CachedRequestsManager.find(HttpContext.req.url);
+        if (cache) {
+            if (cache.Etag!=Repository.getETag(HttpContext.path.model)) {
+                CachedRequestsManager.clear(HttpContext.req.url);
+                return false;
+            }
+            HttpContext.response.JSON(cache.content, cache.ETag, true);
+            return true;
+        } 
+                return false;
     }
-    let cache = CachedRequestsManager.find(HttpContext.req.url);
-    if (cache) {
-      HttpContext.response.JSON(cache.content, cache.ETag, true);
-      return true;
-    }
-    return false;
-  }
 }
