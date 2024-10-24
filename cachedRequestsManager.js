@@ -1,6 +1,5 @@
 import * as utilities from "./utilities.js";
 import * as serverVariables from "./serverVariables.js";
-import HttpContext from './httpContext.js';
 
 let cacheRequestsExpirationTime = serverVariables.get("main.cacheRequestsExpirationTime");
 
@@ -15,14 +14,13 @@ export default class CachedRequestsManager {
     console.log(BgWhite + FgOrange, "[Periodic repositories data caches cleaning process started...]");
   }
   static add(url, content, ETag = "") {
-    /* mise en cache */
-    if (!global.cachedRequestsCleaner) {
-      global.cachedRequestsCleaner = true;
+    if (!cachedRequestsCleaner) {
+      cachedRequestsCleaner = true;
       CachedRequestsManager.startCachedRequestsCleaner();
   }
   if (url != "") {
       CachedRequestsManager.clear(url);
-      global.requestsCache.push({
+      requestsCache.push({
           url,
           content,
           ETag,
@@ -38,7 +36,7 @@ export default class CachedRequestsManager {
           for (let cache of requestsCache) {
               if (cache.url == url) {
                   cache.Expire_Time = utilities.nowInSeconds() + cacheRequestsExpirationTime;
-                  console.log(BgWhite + FgOrange, `[${cache.url} data retrieved from cache]`);
+                  console.log(BgWhite + FgOrange, `[${cache.url} data url retrieved from cache]`);
                   return cache.data;
               }
           }
@@ -65,7 +63,7 @@ export default class CachedRequestsManager {
     let now = utilities.nowInSeconds();
     for (let cache of requestsCache) {
         if (cache.Expire_Time <= now) {
-            console.log(BgWhite + FgBlue, "Cached file data of " + cache.url + ".json expired");
+            console.log(BgWhite + FgOrange, "Cached file data of url: " + cache.url + ".json expired");
         }
     }
     requestsCache = requestsCache.filter( cache => cache.Expire_Time > now);
@@ -77,18 +75,12 @@ static get(HttpContext) {
     Donc, si les données proviennent du cache, on ne les met pas dans une autre cache. 
     Si elles ne proviennent pas du cache, il faut les ajouter.
     */
-    return new Promise(async (resolve) => {
         const cache = CachedRequestsManager.find(HttpContext.req.url);
         if (cache && HttpContext.isCacheable) {
             cache.Expire_Time = utilities.nowInSeconds() + cacheRequestsExpirationTime;
             HttpContext.response.JSON(cache.content, cache.ETag, true);
-            console.log(BgWhite + FgBlue, `[${cache.url} data retrieved from cache]`);
-            resolve(true);
-        } else {
-            resolve(false);
-        }
-    });
-}
+    };
+   }
 
 }
 

@@ -26,10 +26,10 @@ export default class APIServer {
         // common middlewares
         this.middlewaresPipeline.add(handleCORSPreflight);
         this.middlewaresPipeline.add(handleStaticResourceRequest);
-       
+        this.middlewaresPipeline.add(cachedRequestsManager.get);
+
         // API middlewares
         this.middlewaresPipeline.add(router.API_EndPoint);
-        this.middlewaresPipeline.add(cachedRequestsManager.get);
     }
     async handleHttpRequest(req, res) {
         this.markRequestProcessStartTime();
