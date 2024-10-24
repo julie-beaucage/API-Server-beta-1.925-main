@@ -6,6 +6,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 import { log } from "./log.js";
 import CachedRequestsManager from "./cachedRequestsManager.js";
+import HttpContext from './httpContext.js';
 
 export default class Response {
     constructor(HttpContext) {
@@ -41,8 +42,9 @@ export default class Response {
         this.res.writeHead(204, { 'ETag': ETag });
         this.end();
     }
-    JSON(obj, ETag = "",fromCache = false) {                         // ok status with content
-        if ( ! fromCache && this.HttpContext.path.isAPI && this.HttpContext.path.id == undefined) 
+    JSON(obj, ETag = "",fromCache = false) {   
+        // ok status with content
+        if (!fromCache && this.HttpContext.isCacheable)
             {
                 CachedRequestsManager.add(this.HttpContext.req.url,obj,ETag);
             }

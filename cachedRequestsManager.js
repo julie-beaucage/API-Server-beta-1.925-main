@@ -1,5 +1,6 @@
 import * as utilities from "./utilities.js";
 import * as serverVariables from "./serverVariables.js";
+import HttpContext from './httpContext.js';
 
 let cacheRequestsExpirationTime = serverVariables.get("main.cacheRequestsExpirationTime");
 
@@ -11,7 +12,7 @@ export default class CachedRequestsManager {
   static startCachedRequestsCleaner() {
     /* démarre le processus de nettoyage des caches périmées */
     setInterval(CachedRequestsManager.flushExpired, cacheRequestsExpirationTime * 1000);
-    console.log(BgWhite + FgBlue, "[Periodic repositories data caches cleaning process started...]");
+    console.log(BgWhite + FgOrange, "[Periodic repositories data caches cleaning process started...]");
   }
   static add(url, content, ETag = "") {
     /* mise en cache */
@@ -27,7 +28,7 @@ export default class CachedRequestsManager {
           ETag,
           Expire_Time: utilities.nowInSeconds() + cacheRequestsExpirationTime
       });
-      console.log(BgWhite + FgBlue, `[Data of ${url} repository has been cached]`);
+      console.log(BgWhite + FgOrange, `[Data of url ${url} repository has been cached]`);
   }
   }
   static find(url) {
@@ -37,7 +38,7 @@ export default class CachedRequestsManager {
           for (let cache of requestsCache) {
               if (cache.url == url) {
                   cache.Expire_Time = utilities.nowInSeconds() + cacheRequestsExpirationTime;
-                  console.log(BgWhite + FgBlue, `[${cache.url} data retrieved from cache]`);
+                  console.log(BgWhite + FgOrange, `[${cache.url} data retrieved from cache]`);
                   return cache.data;
               }
           }
@@ -78,7 +79,7 @@ static get(HttpContext) {
     */
     return new Promise(async (resolve) => {
         const cache = CachedRequestsManager.find(HttpContext.req.url);
-        if (cache) {
+        if (cache && HttpContext.isCacheable) {
             cache.Expire_Time = utilities.nowInSeconds() + cacheRequestsExpirationTime;
             HttpContext.response.JSON(cache.content, cache.ETag, true);
             console.log(BgWhite + FgBlue, `[${cache.url} data retrieved from cache]`);
