@@ -37,7 +37,6 @@ export default class CachedRequestsManager {
   }
   static find(url) {
     /* retourne la cache associée à l'url */
-   console.log(requestsCache);
     try {
       if (url != "") {
         for (let cache of requestsCache) {
